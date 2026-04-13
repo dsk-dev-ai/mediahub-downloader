@@ -1,5 +1,4 @@
 from PySide6.QtCore import QThread, Signal
-
 from app.core.downloader import download
 
 
@@ -21,5 +20,5 @@ class DownloadWorker(QThread):
             self.fmt,
             self.quality,
             self.progress,
-            self.status,
+            self.status
         )

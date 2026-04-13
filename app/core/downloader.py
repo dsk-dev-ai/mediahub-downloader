@@ -1,12 +1,15 @@
+import yt_dlp
 import os
 import shutil
-import yt_dlp
 
 
 def get_ffmpeg():
     return shutil.which("ffmpeg")
 
 
+# =========================
+# 🔥 CLEAN PROGRESS HOOK
+# =========================
 def make_hook(progress_signal, status_signal):
     def hook(data):
         state = data.get("status")
@@ -16,25 +19,28 @@ def make_hook(progress_signal, status_signal):
             downloaded = data.get("downloaded_bytes", 0)
 
             if total:
-                progress_signal.emit(int(downloaded / total * 100))
+                percent = int(downloaded / total * 100)
+                progress_signal.emit(percent)
 
             speed = data.get("speed")
             eta = data.get("eta")
 
             if speed:
-                speed_mb = speed / 1024 / 1024
-                status_signal.emit(f"⬇ Downloading at {speed_mb:.2f} MB/s")
+                status_signal.emit(f"⬇ {speed/1024/1024:.2f} MB/s")
 
-            if eta is not None:
+            if eta:
                 status_signal.emit(f"⏳ ETA: {eta}s")
 
         elif state == "finished":
             progress_signal.emit(100)
-            status_signal.emit("🔄 Processing media...")
+            status_signal.emit("🔄 Processing...")
 
     return hook
 
 
+# =========================
+# BASE OPTIONS
+# =========================
 def base_opts(path, hook):
     return {
         "outtmpl": os.path.join(path, "%(title)s.%(ext)s"),
@@ -47,6 +53,9 @@ def base_opts(path, hook):
     }
 
 
+# =========================
+# VIDEO OPTIONS
+# =========================
 def mp4_opts(opts, quality):
     ffmpeg = get_ffmpeg()
 
@@ -55,7 +64,8 @@ def mp4_opts(opts, quality):
     else:
         height = quality.replace("p", "")
         opts["format"] = (
-            f"bestvideo[height<={height}]+bestaudio/best" if ffmpeg else f"best[height<={height}]/best"
+            f"bestvideo[height<={height}]+bestaudio/best"
+            if ffmpeg else f"best[height<={height}]/best"
         )
 
     if ffmpeg:
@@ -64,36 +74,47 @@ def mp4_opts(opts, quality):
     return opts
 
 
+# =========================
+# AUDIO OPTIONS
+# =========================
 def mp3_opts(opts, quality):
     bitrate = quality.replace(" kbps", "")
-    opts.update(
-        {
-            "format": "bestaudio/best",
-            "postprocessors": [
-                {
-                    "key": "FFmpegExtractAudio",
-                    "preferredcodec": "mp3",
-                    "preferredquality": bitrate,
-                }
-            ],
-        }
-    )
+
+    opts.update({
+        "format": "bestaudio/best",
+        "postprocessors": [{
+            "key": "FFmpegExtractAudio",
+            "preferredcodec": "mp3",
+            "preferredquality": bitrate,
+        }],
+    })
+
     return opts
 
 
+# =========================
+# MAIN DOWNLOAD
+# =========================
 def download(url, path, fmt, quality, progress, status):
     if not url.startswith("http"):
         status.emit("❌ Invalid URL")
         return
 
     os.makedirs(path, exist_ok=True)
+
     hook = make_hook(progress, status)
     opts = base_opts(path, hook)
 
     try:
-        opts = mp4_opts(opts, quality) if fmt == "MP4" else mp3_opts(opts, quality)
+        if fmt == "MP4":
+            opts = mp4_opts(opts, quality)
+        else:
+            opts = mp3_opts(opts, quality)
+
         with yt_dlp.YoutubeDL(opts) as ydl:
             ydl.download([url])
+
         status.emit("✅ Done!")
-    except Exception as exc:
-        status.emit(f"❌ Error: {str(exc)[:200]}")
+
+    except Exception as e:
+        status.emit(f"❌ Error: {str(e)[:150]}")

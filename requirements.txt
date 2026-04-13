@@ -1,10 +1,10 @@
 PySide6
 yt-dlp
 qtawesome
-browser-cookie3
-pycryptodomex
-supabase
+supabase==2.4.0
 httpx
 python-dotenv
 stripe
 razorpay
+browser-cookie3
+pycryptodomex
