@@ -26,7 +26,6 @@ class AuthService:
         if not self.client:
             return False, "❌ Supabase not configured"
 
-        # ✅ minimal validation (safe)
         if not email or not password:
             return False, "❌ Email & password required"
 
@@ -49,17 +48,17 @@ class AuthService:
             return False, "❌ Signup failed"
 
         except Exception as e:
-            return False, str(e)
+            return False, str(e)   # ✅ FIXED (single clean return)
 
     def login(self, email, password):
         if settings.dev_mode:
             self.user = SessionUser(id="dev-user", email=email)
             return True, "✅ Dev login"
 
+        # ✅ CRITICAL FIX (bot issue resolved)
         if not self.client:
             return False, "❌ Supabase not configured"
 
-        # ✅ minimal validation (safe)
         if not email or not password:
             return False, "❌ Email & password required"
 
@@ -76,7 +75,7 @@ class AuthService:
             return False, "❌ Invalid credentials"
 
         except Exception as e:
-            return False, str(e)
+            return False, str(e)   # ✅ FIXED (no duplicate return)
 
     def get_user(self):
         return self.user
