@@ -8,14 +8,15 @@ class User:
 
     def load(self):
         user = auth_service.get_user()
-
         if not user:
             return
 
-        res = db_select("profiles", f"&id=eq.{user['id']}")
-
-        if res:
-            self.is_pro = res[0]["is_pro"]
+        try:
+            res = db_select("profiles", f"&id=eq.{user.id}")
+            if res:
+                self.is_pro = bool(res[0].get("is_pro", False))
+        except Exception:
+            self.is_pro = False
 
 
 current_user = User()
