@@ -1,2 +1,6 @@
+supabase 
 PySide6
-yt-dlp
+yt-dlp 
+qtawesome
+browser-cookie3 
+pycryptodomex
