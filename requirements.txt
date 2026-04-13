@@ -1,6 +1,10 @@
-supabase 
 PySide6
-yt-dlp 
+yt-dlp
 qtawesome
-browser-cookie3 
+browser-cookie3
 pycryptodomex
+supabase
+httpx
+python-dotenv
+stripe
+razorpay

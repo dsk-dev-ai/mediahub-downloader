@@ -1,6 +1,7 @@
 from PySide6.QtWidgets import *
 from PySide6.QtCore import Qt, QTimer
 from app.services.auth import auth_service
+from config import settings
 
 
 class LoginWindow(QWidget):
@@ -159,7 +160,7 @@ class LoginWindow(QWidget):
 
             # 🔐 SAVE SESSION
             if self.remember.isChecked():
-                with open("session.txt", "w") as f:
+                with open(settings.session_file, "w", encoding="utf-8") as f:
                     f.write(email)
 
             QTimer.singleShot(500, self.finish_login)
