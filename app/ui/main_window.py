@@ -156,10 +156,15 @@ class MainWindow(QWidget):
         options.addWidget(self.format)
         options.addWidget(self.quality)
 
+        # ✅ FIXED DOWNLOAD PATH (ONLY CHANGE)
         path_row = QHBoxLayout()
-        self.path = QLineEdit(os.path.join(os.getcwd(), "downloads"))
+        default_download_path = os.path.join(os.path.expanduser("~"), "Downloads", "MediaHub")
+        os.makedirs(default_download_path, exist_ok=True)
+        self.path = QLineEdit(default_download_path)
+
         browse = QPushButton("📂")
         browse.clicked.connect(self.pick_folder)
+
         path_row.addWidget(self.path)
         path_row.addWidget(browse)
 
