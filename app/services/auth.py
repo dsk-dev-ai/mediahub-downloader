@@ -1,27 +1,32 @@
+from dataclasses import dataclass
+from typing import Optional
 from supabase import create_client
-from config import SUPABASE_URL, SUPABASE_KEY
+from config import settings
 
-# 🔧 TURN ON FOR TESTING (VERY IMPORTANT)
-DEV_MODE = True
+
+@dataclass
+class SessionUser:
+    id: str
+    email: str
 
 
 class AuthService:
     def __init__(self):
-        self.client = create_client(SUPABASE_URL, SUPABASE_KEY)
-        self.user = None
+        self.user: Optional[SessionUser] = None
+        self.client = None
 
-    # ========================
-    # 📝 SIGNUP
-    # ========================
+        if settings.supabase_url and settings.supabase_key:
+            self.client = create_client(settings.supabase_url, settings.supabase_key)
+
     def signup(self, email, password):
-        if DEV_MODE:
-            print("DEV SIGNUP")
-            return True, "✅ Dev signup success"
+        if settings.dev_mode:
+            self.user = SessionUser(id="dev-user", email=email)
+            return True, "✅ Dev signup"
+
+        if not self.client:
+            return False, "❌ Supabase not configured"
 
         try:
-            if not email or not password:
-                return False, "❌ Email & password required"
-
             res = self.client.auth.sign_up({
                 "email": email,
                 "password": password
@@ -34,56 +39,33 @@ class AuthService:
                     "is_pro": False
                 }).execute()
 
-                return True, "✅ Signup successful"
+                self.user = SessionUser(id=res.user.id, email=email)
+                return True, "✅ Signup success"
 
             return False, "❌ Signup failed"
 
         except Exception as e:
-            error = str(e).lower()
+            return False, str(e)
 
-            if "rate limit" in error:
-                return False, "⏳ Too many attempts. Wait 1 min."
-
-            return False, f"❌ {str(e)}"
-
-    # ========================
-    # 🔐 LOGIN
-    # ========================
     def login(self, email, password):
-        if DEV_MODE:
-            print("DEV LOGIN")
-            # 👇 THIS FIXES YOUR ISSUE
-            self.user = type("User", (), {"email": email})
-            return True, "✅ Dev login success"
+        if settings.dev_mode:
+            self.user = SessionUser(id="dev-user", email=email)
+            return True, "✅ Dev login"
 
         try:
-            if not email or not password:
-                return False, "❌ Email & password required"
-
             res = self.client.auth.sign_in_with_password({
                 "email": email,
                 "password": password
             })
 
             if res.user:
-                self.user = res.user
-                return True, "✅ Login successful"
+                self.user = SessionUser(id=res.user.id, email=res.user.email)
+                return True, "✅ Login success"
 
             return False, "❌ Invalid credentials"
 
         except Exception as e:
-            error = str(e).lower()
-
-            if "email not confirmed" in error:
-                return False, "📧 Please verify your email first"
-
-            if "invalid login credentials" in error:
-                return False, "❌ Wrong email or password"
-
-            if "rate limit" in error:
-                return False, "⏳ Too many attempts. Wait 1 min."
-
-            return False, f"❌ {str(e)}"
+            return False, str(e)
 
     def get_user(self):
         return self.user
