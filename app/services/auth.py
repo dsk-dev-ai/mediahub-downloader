@@ -52,6 +52,10 @@ class AuthService:
             self.user = SessionUser(id="dev-user", email=email)
             return True, "✅ Dev login"
 
+        # ✅ ONLY FIX ADDED (prevents crash)
+        if not self.client:
+            return False, "❌ Supabase not configured"
+
         try:
             res = self.client.auth.sign_in_with_password({
                 "email": email,
