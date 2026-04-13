@@ -51,7 +51,10 @@ def mp4_opts(opts, quality):
         opts["format"] = "bestvideo+bestaudio/best" if ffmpeg else "best"
     else:
         height = quality.replace("p", "")
-        opts["format"] = f"bestvideo[height<={height}]+bestaudio/best"
+        opts["format"] = (
+            f"bestvideo[height<={height}]+bestaudio/best"
+            if ffmpeg else f"best[height<={height}]/best"
+        )
 
     if ffmpeg:
         opts["ffmpeg_location"] = ffmpeg
@@ -59,19 +62,28 @@ def mp4_opts(opts, quality):
     return opts
 
 
-def mp3_opts(opts):
+# ✅ FIXED: MP3 QUALITY SUPPORT
+def mp3_opts(opts, quality):
+    bitrate = quality.replace(" kbps", "")
+
     opts.update({
         "format": "bestaudio/best",
         "postprocessors": [{
             "key": "FFmpegExtractAudio",
             "preferredcodec": "mp3",
+            "preferredquality": bitrate,
         }],
     })
+
     return opts
 
 
 def download(url, path, fmt, quality, progress, status):
     try:
+        if not url.startswith("http"):
+            status.emit("❌ Invalid URL")
+            return
+
         os.makedirs(path, exist_ok=True)
 
         hook = make_hook(progress, status)
@@ -80,7 +92,7 @@ def download(url, path, fmt, quality, progress, status):
         if fmt == "MP4":
             opts = mp4_opts(opts, quality)
         else:
-            opts = mp3_opts(opts)
+            opts = mp3_opts(opts, quality)  # ✅ FIXED CALL
 
         with yt_dlp.YoutubeDL(opts) as ydl:
             ydl.download([url])
