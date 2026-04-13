@@ -26,6 +26,10 @@ class AuthService:
         if not self.client:
             return False, "❌ Supabase not configured"
 
+        # ✅ minimal validation (safe)
+        if not email or not password:
+            return False, "❌ Email & password required"
+
         try:
             res = self.client.auth.sign_up({
                 "email": email,
@@ -55,7 +59,7 @@ class AuthService:
         if not self.client:
             return False, "❌ Supabase not configured"
 
-        # ✅ MINOR SAFE ADD (optional but recommended)
+        # ✅ minimal validation (safe)
         if not email or not password:
             return False, "❌ Email & password required"
 
