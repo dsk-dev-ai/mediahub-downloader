@@ -52,9 +52,12 @@ class AuthService:
             self.user = SessionUser(id="dev-user", email=email)
             return True, "✅ Dev login"
 
-        # ✅ FIX 1: prevent crash when Supabase not configured
         if not self.client:
             return False, "❌ Supabase not configured"
+
+        # ✅ MINOR SAFE ADD (optional but recommended)
+        if not email or not password:
+            return False, "❌ Email & password required"
 
         try:
             res = self.client.auth.sign_in_with_password({
@@ -69,7 +72,6 @@ class AuthService:
             return False, "❌ Invalid credentials"
 
         except Exception as e:
-            # ✅ FIX 2: remove duplicate return (clean)
             return False, str(e)
 
     def get_user(self):
