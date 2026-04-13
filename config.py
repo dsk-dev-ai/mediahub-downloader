@@ -15,7 +15,19 @@ def _to_bool(value, default=False):
 class Settings:
     supabase_url: str = os.getenv("SUPABASE_URL", "")
     supabase_key: str = os.getenv("SUPABASE_KEY", "")
-    dev_mode: bool = _to_bool(os.getenv("DEV_MODE"), True)
+
+    stripe_secret_key: str = os.getenv("STRIPE_SECRET_KEY", "")
+    stripe_price_id: str = os.getenv("STRIPE_PRICE_ID", "")
+    stripe_success_url: str = os.getenv("STRIPE_SUCCESS_URL", "http://localhost/success")
+    stripe_cancel_url: str = os.getenv("STRIPE_CANCEL_URL", "http://localhost/cancel")
+
+    razorpay_key_id: str = os.getenv("RAZORPAY_KEY_ID", "")
+    razorpay_key_secret: str = os.getenv("RAZORPAY_KEY_SECRET", "")
+
+    session_file: str = os.getenv("SESSION_FILE", "session.txt")
+
+    # 🔒 SECURITY FIX (IMPORTANT)
+    dev_mode: bool = _to_bool(os.getenv("DEV_MODE"), False)
 
 
 settings = Settings()

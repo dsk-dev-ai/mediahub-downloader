@@ -2,7 +2,7 @@ import httpx
 from config import settings
 
 
-def _headers():
+def headers():
     return {
         "apikey": settings.supabase_key,
         "Authorization": f"Bearer {settings.supabase_key}",
@@ -12,4 +12,4 @@ def _headers():
 
 def db_update(table, data, condition):
     url = f"{settings.supabase_url}/rest/v1/{table}?{condition}"
-    return httpx.patch(url, json=data, headers=_headers(), timeout=20)
+    return httpx.patch(url, json=data, headers=headers())

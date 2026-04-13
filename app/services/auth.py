@@ -21,7 +21,7 @@ class AuthService:
     def signup(self, email, password):
         if settings.dev_mode:
             self.user = SessionUser(id="dev-user", email=email)
-            return True, "✅ Dev signup success"
+            return True, "✅ Dev signup"
 
         if not self.client:
             return False, "❌ Supabase not configured"
@@ -40,20 +40,17 @@ class AuthService:
                 }).execute()
 
                 self.user = SessionUser(id=res.user.id, email=email)
-                return True, "✅ Signup successful"
+                return True, "✅ Signup success"
 
             return False, "❌ Signup failed"
 
         except Exception as e:
-            return False, f"❌ {str(e)}"
+            return False, str(e)
 
     def login(self, email, password):
         if settings.dev_mode:
             self.user = SessionUser(id="dev-user", email=email)
-            return True, "✅ Dev login success"
-
-        if not self.client:
-            return False, "❌ Supabase not configured"
+            return True, "✅ Dev login"
 
         try:
             res = self.client.auth.sign_in_with_password({
@@ -63,12 +60,12 @@ class AuthService:
 
             if res.user:
                 self.user = SessionUser(id=res.user.id, email=res.user.email)
-                return True, "✅ Login successful"
+                return True, "✅ Login success"
 
             return False, "❌ Invalid credentials"
 
         except Exception as e:
-            return False, f"❌ {str(e)}"
+            return False, str(e)
 
     def get_user(self):
         return self.user
