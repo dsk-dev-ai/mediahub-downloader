@@ -52,7 +52,7 @@ class AuthService:
             self.user = SessionUser(id="dev-user", email=email)
             return True, "✅ Dev login"
 
-        # ✅ ONLY FIX ADDED (prevents crash)
+        # ✅ FIX 1: prevent crash when Supabase not configured
         if not self.client:
             return False, "❌ Supabase not configured"
 
@@ -69,6 +69,7 @@ class AuthService:
             return False, "❌ Invalid credentials"
 
         except Exception as e:
+            # ✅ FIX 2: remove duplicate return (clean)
             return False, str(e)
 
     def get_user(self):
