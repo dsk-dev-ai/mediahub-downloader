@@ -226,3 +226,10 @@ Thumbs.db
 dist/
 build/
 *.spec
+
+.env
+__pycache__/
+build/
+dist/
+venv/
+*.spec
