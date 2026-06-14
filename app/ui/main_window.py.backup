@@ -1,0 +1,33 @@
+import os
+import webbrowser
+from typing import Optional, List
+
+import qtawesome as qta
+import requests
+import yt_dlp
+from PySide6.QtCore import QTimer, Qt
+from PySide6.QtGui import QPixmap
+from PySide6.QtWidgets import (
+    QComboBox,
+    QFileDialog,
+    QFrame,
+    QHBoxLayout,
+    QLabel,
+    QLineEdit,
+    QListWidget,
+    QListWidgetItem,
+    QMessageBox,
+    QProgressBar,
+    QPushButton,
+    QStackedWidget,
+    QTextEdit,
+    QVBoxLayout,
+    QWidget,
+)
+
+from app.core.worker import DownloadWorker
+from app.services.auth import auth_service
+from app.services.history import history_service
+from app.services.payment import payment_service
+from app.services.user import current_user
+from app.utils.logger import get_logger
