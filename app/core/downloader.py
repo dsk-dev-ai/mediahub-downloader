@@ -1,103 +1,89 @@
-import yt_dlp
 import os
-import shutil
+import yt_dlp
+from typing import Optional
 
 
-def get_ffmpeg():
-    return shutil.which("ffmpeg")
+def download_media(
+    url: str,
+    output_path: str,
+    format_choice: str,
+    quality: str,
+    progress_hook=None,
+) -> bool:
+    """
+    Download media from URL with specified format and quality.
 
+    Args:
+        url: Video URL to download
+        output_path: Directory to save the file
+        format_choice: Either 'MP4' or 'MP3'
+        quality: Quality setting (e.g., '1080p', '320 kbps')
+        progress_hook: Optional callback for download progress
 
-def make_hook(progress_signal, status_signal):
-    def hook(data):
-        state = data.get("status")
+    Returns:
+        True if download successful, False otherwise
+    """
+    # Ensure output directory exists
+    os.makedirs(output_path, exist_ok=True)
 
-        if state == "downloading":
-            total = data.get("total_bytes") or data.get("total_bytes_estimate")
-            downloaded = data.get("downloaded_bytes", 0)
-
-            if total:
-                percent = int(downloaded / total * 100)
-                progress_signal.emit(percent)
-
-            speed = data.get("speed")
-            eta = data.get("eta")
-
-            if speed:
-                status_signal.emit(f"⬇ {speed/1024/1024:.2f} MB/s")
-
-            if eta:
-                status_signal.emit(f"⏳ ETA: {eta}s")
-
-        elif state == "finished":
-            progress_signal.emit(100)
-            status_signal.emit("🔄 Processing...")
-
-    return hook
-
-
-def base_opts(path, hook):
-    return {
-        "outtmpl": os.path.join(path, "%(title)s.%(ext)s"),
-        "progress_hooks": [hook],
-        "quiet": True,
-        "retries": 10,
+    # Configure yt-dlp options based on format and quality
+    ydl_opts = {
+        'outtmpl': os.path.join(output_path, '%(title)s.%(ext)s'),
+        'progress_hooks': [progress_hook] if progress_hook else [],
     }
 
-
-def mp4_opts(opts, quality):
-    ffmpeg = get_ffmpeg()
-
-    if quality == "Auto (Best)":
-        opts["format"] = "bestvideo+bestaudio/best" if ffmpeg else "best"
-    else:
-        height = quality.replace("p", "")
-        opts["format"] = (
-            f"bestvideo[height<={height}]+bestaudio/best"
-            if ffmpeg else f"best[height<={height}]/best"
-        )
-
-    if ffmpeg:
-        opts["ffmpeg_location"] = ffmpeg
-
-    return opts
-
-
-# ✅ FIXED: MP3 QUALITY SUPPORT
-def mp3_opts(opts, quality):
-    bitrate = quality.replace(" kbps", "")
-
-    opts.update({
-        "format": "bestaudio/best",
-        "postprocessors": [{
-            "key": "FFmpegExtractAudio",
-            "preferredcodec": "mp3",
-            "preferredquality": bitrate,
-        }],
-    })
-
-    return opts
-
-
-def download(url, path, fmt, quality, progress, status):
-    try:
-        if not url.startswith("http"):
-            status.emit("❌ Invalid URL")
-            return
-
-        os.makedirs(path, exist_ok=True)
-
-        hook = make_hook(progress, status)
-        opts = base_opts(path, hook)
-
-        if fmt == "MP4":
-            opts = mp4_opts(opts, quality)
+    if format_choice == 'MP4':
+        # Video format selection
+        if quality == 'Auto (Best)':
+            ydl_opts['format'] = 'bestvideo+bestaudio/best'
+        elif quality == '1080p':
+            ydl_opts['format'] = 'bestvideo[height<=1080]+bestaudio/best[height<=1080]'
+        elif quality == '720p':
+            ydl_opts['format'] = 'bestvideo[height<=720]+bestaudio/best[height<=720]'
+        elif quality == '480p':
+            ydl_opts['format'] = 'bestvideo[height<=480]+bestaudio/best[height<=480]'
         else:
-            opts = mp3_opts(opts, quality)  # ✅ FIXED CALL
+            ydl_opts['format'] = 'bestvideo+bestaudio/best'
+            
+        # Merge video and audio
+        ydl_opts['merge_output_format'] = 'mp4'
 
-        with yt_dlp.YoutubeDL(opts) as ydl:
+    elif format_choice == 'MP3':
+        # Audio format selection
+        if quality == '320 kbps':
+            ydl_opts['format'] = 'bestaudio/best'
+            ydl_opts['postprocessors'] = [{
+                'key': 'FFmpegExtractAudio',
+                'preferredcodec': 'mp3',
+                'preferredquality': '320',
+            }]
+        elif quality == '256 kbps':
+            ydl_opts['format'] = 'bestaudio/best'
+            ydl_opts['postprocessors'] = [{
+                'key': 'FFmpegExtractAudio',
+                'preferredcodec': 'mp3',
+                'preferredquality': '256',
+            }]
+        elif quality == '128 kbps':
+            ydl_opts['format'] = 'bestaudio/best'
+            ydl_opts['postprocessors'] = [{
+                'key': 'FFmpegExtractAudio',
+                'preferredcodec': 'mp3',
+                'preferredquality': '128',
+            }]
+        else:
+            # Default to best audio quality
+            ydl_opts['format'] = 'bestaudio/best'
+            ydl_opts['postprocessors'] = [{
+                'key': 'FFmpegExtractAudio',
+                'preferredcodec': 'mp3',
+                'preferredquality': '192',
+            }]
+
+    try:
+        with yt_dlp.YoutubeDL(ydl_opts) as ydl:
             ydl.download([url])
-
-        status.emit("✅ Done!")
-
+        return True
     except Exception as e:
-        status.emit(f"❌ {str(e)}")
+        print(f"Download error: {e}")
+        return False

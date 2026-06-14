@@ -1,15 +1,19 @@
-import httpx
+from supabase import create_client
 from config import settings
 
 
-def headers():
-    return {
-        "apikey": settings.supabase_key,
-        "Authorization": f"Bearer {settings.supabase_key}",
-        "Content-Type": "application/json",
-    }
+def get_supabase_client():
+    """
+    Get a Supabase client instance.
+    
+    Returns:
+        Supabase client or None if not configured
+    """
+    if not settings.supabase_url or not settings.supabase_key:
+        return None
+    
+    return create_client(settings.supabase_url, settings.supabase_key)
 
 
-def db_update(table, data, condition):
-    url = f"{settings.supabase_url}/rest/v1/{table}?{condition}"
-    return httpx.patch(url, json=data, headers=headers())
+# Initialize client (can be None if not configured)
+supabase_client = get_supabase_client()

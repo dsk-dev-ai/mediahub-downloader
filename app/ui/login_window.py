@@ -1,15 +1,18 @@
 from PySide6.QtWidgets import *
 from PySide6.QtCore import Qt, QTimer
 from app.services.auth import auth_service
+from app.utils.logger import get_logger
 from config import settings
 
 
 class LoginWindow(QWidget):
     def __init__(self, open_main_callback):
         super().__init__()
+        self.log = get_logger("login_window")
+        self.log.info("Initializing login window")
 
         self.open_main = open_main_callback
-        self.cooldown = False
+        self.cooldown: bool = False
 
         self.setWindowTitle("MediaHub Login")
         self.resize(380, 320)
@@ -125,7 +128,8 @@ class LoginWindow(QWidget):
     # ========================
     # 🔁 RESET STATE
     # ========================
-    def reset_buttons(self):
+    def reset_buttons(self) -> None:
+        self.log.debug("Resetting button states")
         self.cooldown = False
         self.btn_login.setEnabled(True)
         self.btn_signup.setEnabled(True)
@@ -134,7 +138,7 @@ class LoginWindow(QWidget):
     # ========================
     # 🔐 LOGIN
     # ========================
-    def handle_login(self):
+    def handle_login(self) -> None:
         if self.cooldown:
             self.label.setText("⏳ Please wait...")
             return
@@ -145,8 +149,10 @@ class LoginWindow(QWidget):
         if not email or not password:
             self.label.setText("❌ Enter email & password")
             self.label.setStyleSheet("color: red;")
+            self.log.warning("Login attempt with empty email or password")
             return
 
+        self.log.info(f"Attempting login for email: {email}")
         self.cooldown = True
         self.btn_login.setEnabled(False)
         self.btn_login.setText("Logging in...")
@@ -157,27 +163,31 @@ class LoginWindow(QWidget):
 
         if success:
             self.label.setStyleSheet("color: #22c55e;")
+            self.log.info(f"Login successful for user: {email}")
 
             # 🔐 SAVE SESSION
             if self.remember.isChecked():
                 with open(settings.session_file, "w", encoding="utf-8") as f:
                     f.write(email)
+                self.log.info(f"Session saved for user: {email}")
 
             QTimer.singleShot(500, self.finish_login)
             return
 
         # ❌ error
         self.label.setStyleSheet("color: red;")
+        self.log.warning(f"Login failed for email: {email} - {msg}")
         QTimer.singleShot(3000, self.reset_buttons)
 
-    def finish_login(self):
+    def finish_login(self) -> None:
+        self.log.info("Finishing login process")
         self.open_main()
         self.close()
 
     # ========================
     # 📝 SIGNUP
     # ========================
-    def handle_signup(self):
+    def handle_signup(self) -> None:
         if self.cooldown:
             self.label.setText("⏳ Please wait...")
             return
@@ -188,8 +198,10 @@ class LoginWindow(QWidget):
         if not email or not password:
             self.label.setText("❌ Enter email & password")
             self.label.setStyleSheet("color: red;")
+            self.log.warning("Signup attempt with empty email or password")
             return
 
+        self.log.info(f"Attempting signup for email: {email}")
         self.cooldown = True
         self.btn_signup.setEnabled(False)
 
@@ -198,7 +210,9 @@ class LoginWindow(QWidget):
 
         if success:
             self.label.setStyleSheet("color: #22c55e;")
+            self.log.info(f"Signup successful for user: {email}")
         else:
             self.label.setStyleSheet("color: red;")
+            self.log.warning(f"Signup failed for email: {email} - {msg}")
 
         QTimer.singleShot(3000, self.reset_buttons)
