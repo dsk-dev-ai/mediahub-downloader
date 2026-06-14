@@ -6,3 +6,7 @@ python-dotenv
 stripe
 razorpay
 qtawesome
+# Testing dependencies
+pytest>=6.0
+pytest-qt>=4.0
+mock>=4.0

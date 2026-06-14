@@ -1,9 +1,11 @@
 import yt_dlp
 import os
 import shutil
+from typing import Optional
+from app.services.history import history_service
 
 
-def get_ffmpeg():
+def get_ffmpeg() -> Optional[str]:
     return shutil.which("ffmpeg")
 
 
@@ -78,7 +80,7 @@ def mp3_opts(opts, quality):
     return opts
 
 
-def download(url, path, fmt, quality, progress, status):
+def download(url: str, path: str, fmt: str, quality: str, progress, status) -> None:
     try:
         if not url.startswith("http"):
             status.emit("❌ Invalid URL")
@@ -95,7 +97,29 @@ def download(url, path, fmt, quality, progress, status):
             opts = mp3_opts(opts, quality)  # ✅ FIXED CALL
 
         with yt_dlp.YoutubeDL(opts) as ydl:
+            # Extract info first to get title
+            info = ydl.extract_info(url, download=False)
+            title = info.get("title", "Unknown Title")
+            
+            # Then download
             ydl.download([url])
+            
+            # Get the actual filename that was downloaded
+            info = ydl.extract_info(url, download=False)
+            filename = ydl.prepare_filename(info)
+            
+            # Adjust filename for MP3 (yt_dlp changes extension after postprocessing)
+            if fmt == "MP3":
+                filename = os.path.splitext(filename)[0] + ".mp3"
+            
+            # Add to history after successful download
+            history_service.add_download(
+                url=url,
+                title=title,
+                file_path=filename,
+                format_type=fmt,
+                quality=quality
+            )
 
         status.emit("✅ Done!")
 

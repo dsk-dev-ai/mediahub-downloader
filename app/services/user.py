@@ -3,10 +3,10 @@ from app.services.auth import auth_service
 
 
 class User:
-    def __init__(self):
-        self.is_pro = False
+    def __init__(self) -> None:
+        self.is_pro: bool = False
 
-    def load(self):
+    def load(self) -> None:
         user = auth_service.get_user()
         if not user:
             return

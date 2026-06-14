@@ -205,3 +205,31 @@ cython_debug/
 marimo/_static/
 marimo/_lsp/
 __marimo__/
+
+# Local History for JetBrains IDEs
+.idea/.idea.LocalHistory/
+*.localhistory/
+
+#_pycache__/
+python_cache/
+.pytest_cache/
+__pycache__/
+.pytype/
+.pyre/
+.mypy_cache/
+.dmypy.json
+dmypy.json
+
+#Backup files
+.bak
+*.bak
+*.backup
+*.tmp
+*.temp
+*.swp
+*.swo
+*.orig
+*.log
+*.pid
+*.seed
+*.pid.lock
