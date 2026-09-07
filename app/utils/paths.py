@@ -1,5 +1,10 @@
 import os
+import shutil
+
 
 def get_ffmpeg():
-    base = os.path.dirname(os.path.dirname(os.path.dirname(__file__)))
-    return os.path.join(base, "assets", "ffmpeg", "ffmpeg.exe")
+    """Locate ffmpeg on the system PATH."""
+    found = shutil.which("ffmpeg")
+    if found:
+        return found
+    return None

@@ -24,6 +24,10 @@ A desktop media downloader built with `PySide6`, `yt-dlp`, and `FFmpeg`, now str
   - Windows `.exe` builds
   - Ubuntu/Debian `.deb` builds
 
+> **Note:** FFmpeg is not bundled in the repository. It is downloaded automatically
+> at build/packaging time (via the deployment scripts) or must be available on your
+> system `PATH` at runtime.
+
 ## Quick Start
 
 ```bash

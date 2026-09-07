@@ -233,3 +233,7 @@ dmypy.json
 *.pid
 *.seed
 *.pid.lock
+
+# Windows binaries
+*.exe
+assets/ffmpeg/

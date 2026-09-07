@@ -1,1 +1,71 @@
-\"\"\"\nAutomatic update service for MediaHub Downloader.\nChecks for new versions and handles updates.\n\"\"\"\nimport json\nimport os\nimport subprocess\nimport sys\nimport threading\nimport urllib.request\nfrom pathlib import Path\nfrom typing import Optional, Tuple\n\n\nclass UpdateService:\n    def __init__(self, current_version: str = \"1.0.0\"):\n        self.current_version = current_version\n        # In a real app, this would point to your update server or GitHub releases\n        self.update_url = \"https://api.github.com/repos/your-username/mediahub-downloader/releases/latest\"\n        \n    def check_for_updates(self) -> Tuple[bool, Optional[str], Optional[str]]:\n        \"\"\"\n        Check if a new version is available.\n        \n        Returns:\n            Tuple of (update_available, latest_version, release_notes)\n        \"\"\"\n        try:\n            # In a real implementation, you would make an HTTP request here\n            # For now, we'll simulate this with a placeholder\n            \n            # Simulate checking for updates\n            # In production, replace this with actual HTTP request:\n            # response = urllib.request.urlopen(self.update_url)\n            # data = json.loads(response.read())\n            # latest_version = data['tag_name'].lstrip('v')\n            # release_notes = data['body']\n            \n            # Placeholder implementation\n            latest_version = \"1.0.1\"  # Simulate a newer version\n            release_notes = \"\\n• Bug fixes and performance improvements\\n• Enhanced download stability\\n• Updated yt-dlp engine\"\n            \n            # Compare versions (simple string comparison for demo)\n            # In production, use proper version comparison (e.g., packaging.version)\n            update_available = self._is_version_newer(latest_version, self.current_version)\n            \n            return update_available, latest_version, release_notes\n            \n        except Exception as e:\n            # In case of network errors or other issues, don't break the app\n            print(f\"Update check failed: {e}\")\n            return False, None, None\n    \n    def _is_version_newer(self, latest: str, current: str) -> bool:\n        \"\"\"Compare version strings to determine if latest is newer than current.\"\"\"\n        try:\n            # Simple version comparison - in production use packaging.version\n            latest_parts = [int(x) for x in latest.split(\".\")]\n            current_parts = [int(x) for x in current.split(\".\")]\n            \n            # Pad shorter version with zeros\n            max_len = max(len(latest_parts), len(current_parts))\n            latest_parts.extend([0] * (max_len - len(latest_parts)))\n            current_parts.extend([0] * (max_len - len(current_parts)))\n            \n            return latest_parts > current_parts\n        except Exception:\n            # If version parsing fails, assume no update available\n            return False\n    \n    def download_and_install_update(self, download_url: str) -> bool:\n        \"\"\"\n        Download and install an update.\n        \n        Args:\n            download_url: URL to download the update from\n            \n        Returns:\n            True if update was initiated successfully, False otherwise\n        \"\"\"\n        try:\n            # In a real implementation, this would:\n            # 1. Download the update package\n            # 2. Verify its integrity\n            # 3. Install it (platform-specific)\n            # 4. Restart the application\n            \n            # For now, we'll just show a message\n            print(f\"Would download and install update from: {download_url}\")\n            return True\n        except Exception as e:\n            print(f\"Failed to download/install update: {e}\")\n            return False\n    \n    def start_background_update_check(self):\n        \"\"\"Start a background thread to check for updates.\"\"\"\n        def check_updates():\n            update_available, latest_version, release_notes = self.check_for_updates()\n            if update_available:\n                # In a real app, you would show a notification to the user\n                print(f\"Update available: {latest_version}\")\n                print(f\"Release notes: {release_notes}\")\n        \n        thread = threading.Thread(target=check_updates, daemon=True)\n        thread.start()\n\n\n# Global update service instance\nupdate_service = UpdateService()\n
+"""Automatic update service for MediaHub Downloader.
+Checks for new versions and handles updates.
+"""
+import json
+import threading
+import urllib.request
+from typing import Optional, Tuple
+
+APP_VERSION = "1.0.0"
+GITHUB_REPO = "your-username/mediahub-downloader"
+
+
+class UpdateService:
+    def __init__(self, current_version: str = APP_VERSION):
+        self.current_version = current_version
+        self.update_url = (
+            f"https://api.github.com/repos/{GITHUB_REPO}/releases/latest"
+        )
+
+    def check_for_updates(self) -> Tuple[bool, Optional[str], Optional[str]]:
+        """Check if a new version is available.
+
+        Returns:
+            Tuple of (update_available, latest_version, release_notes)
+        """
+        try:
+            req = urllib.request.Request(
+                self.update_url,
+                headers={"Accept": "application/vnd.github.v3+json"},
+            )
+            with urllib.request.urlopen(req, timeout=10) as resp:
+                data = json.loads(resp.read().decode())
+
+            latest_version = data["tag_name"].lstrip("v")
+            release_notes = data.get("body", "")
+
+            update_available = self._is_version_newer(
+                latest_version, self.current_version
+            )
+            return update_available, latest_version, release_notes
+
+        except Exception:
+            return False, None, None
+
+    def start_background_update_check(self) -> None:
+        """Spawn a daemon thread that checks for updates."""
+
+        def _check():
+            update_available, latest_version, release_notes = (
+                self.check_for_updates()
+            )
+            if update_available:
+                print(f"Update available: {latest_version}")
+                if release_notes:
+                    print(f"Release notes: {release_notes}")
+
+        thread = threading.Thread(target=_check, daemon=True)
+        thread.start()
+
+    @staticmethod
+    def _is_version_newer(latest: str, current: str) -> bool:
+        """Simple dotted-version comparison."""
+        try:
+            latest_parts = [int(x) for x in latest.split(".")]
+            current_parts = [int(x) for x in current.split(".")]
+            return latest_parts > current_parts
+        except (ValueError, AttributeError):
+            return False
+
+
+update_service = UpdateService()
