@@ -45,9 +45,15 @@ def test_settings_from_env():
     os.environ["RAZORPAY_KEY_SECRET"] = "rzp_secret_123"
     os.environ["SESSION_FILE"] = "custom_session.txt"
     os.environ["DEV_MODE"] = "true"
-    
+
+    import importlib
+    import config as config_module
+
     try:
-        settings = Settings()
+        # Settings field defaults are evaluated at import time, so reload
+        # the module after setting the environment for them to take effect.
+        importlib.reload(config_module)
+        settings = config_module.Settings()
         
         assert settings.supabase_url == "https://test.example.com"
         assert settings.supabase_key == "test-key"
