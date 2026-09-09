@@ -1,9 +1,10 @@
 # MediaHub Downloader
 
-![GitHub](https://img.shields.io/github/license/your-username/mediahub-downloader)
+![GitHub](https://img.shields.io/github/license/dsk-dev-ai/mediahub-downloader)
 ![Python](https://img.shields.io/badge/python-3.10%2B-blue)
 ![PySide6](https://img.shields.io/badge/PySide6-6.11.1-brightgreen)
 ![Tests](https://img.shields.io/badge/tests-passing-brightgreen)
+[![CI](https://github.com/dsk-dev-ai/mediahub-downloader/actions/workflows/ci.yml/badge.svg)](https://github.com/dsk-dev-ai/mediahub-downloader/actions/workflows/ci.yml)
 
 A desktop media downloader built with `PySide6`, `yt-dlp`, and `FFmpeg`, now structured for production-style configuration and deployment.
 
